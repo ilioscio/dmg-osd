@@ -2,6 +2,14 @@
 
 A low battery overlay for Wayland compositors inspired by classic video game health indicators. Your screen pulses red when battery is low.
 
+## Demo
+
+Default low battery:
+![dmg-osd low battery demo](./demo/low.mp4)
+
+Critical battery:
+![dmg-osd critical battery demo](./demo/critical.mp4)
+
 ## Features
 
 - **Wayland Native**: Uses GTK4 Layer Shell for proper overlay rendering
