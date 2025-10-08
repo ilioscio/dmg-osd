@@ -14,18 +14,15 @@ Critical battery:
 
 - **Wayland Native**: Uses GTK4 Layer Shell for proper overlay rendering
 - **Always On Top**: Stays above fullscreen windows using the overlay layer
-- **Battery Aware**: Monitors battery via UPower
-- **Configurable Thresholds**:
-  - Low: ≤30% (slow red pulse)
-  - Critical: ≤15% (faster red pulse)
+- **Battery Aware**: Monitors battery via UPower through DBus
+- **Configurable**: Battery thresholds, colors, pulse rates, intensity
 - **Smart Behavior**: Automatically hides when charging
-- **Smooth Animations**: Pulsing effect with configurable intensity
 
 ## Requirements
 
-- NixOS (or Nix package manager) *See note below
+- NixOS (or Nix package manager) *Or see note below
 - Wayland compositor (tested on Hyprland)
-- Battery-powered device
+- Battery-powered device (duh)
 
 Note: Non-Nix users see BUILD.md for instructions on building with traditional package managers on Debian, Ubuntu, Arch Linux, and Fedora.
 
@@ -75,7 +72,7 @@ Add to your Hyprland config:
 exec-once = dmg-osd
 ```
 
-Or create a systemd user service:
+Or create a systemd user service (not recommended unless you know what you're doing):
 
 ```ini
 [Unit]
