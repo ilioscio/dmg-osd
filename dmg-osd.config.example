@@ -1,0 +1,30 @@
+# dmg-osd example configuration file
+# Place this file in:
+#   ~/.config/dmg-osd/dmg-osd.config (recommended)
+# or
+#   ./dmg-osd.config (current directory)
+#
+# Note: ~/.config/dmg-osd/dmg-osd.config takes precedence
+
+# Battery thresholds (percentage)
+critical_threshold=15.0
+low_threshold=30.0
+
+# Visual settings
+max_opacity=0.4
+min_opacity=0.0
+
+# Animation settings (milliseconds)
+critical_pulse_duration_ms=600
+low_pulse_duration_ms=1200
+update_interval_ms=5000
+
+# Vignette settings
+# How far the red extends from edges (0.0-1.0, where 1.0 is full screen)
+vignette_size=0.4
+
+# Color settings (RGB values 0.0-1.0)
+# Default is red
+red=1.0
+green=0.0
+blue=0.0
