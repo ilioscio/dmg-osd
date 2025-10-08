@@ -5,10 +5,11 @@ A low battery overlay for Wayland compositors inspired by classic video game hea
 ## Demo
 
 Default low battery:
-![dmg-osd low battery demo](./demo/low.mp4)
+![dmg-osd-low-battery-demo](https://github.com/user-attachments/assets/c35754d5-26a9-4da4-a929-c6309cae2501)
 
 Critical battery:
-![dmg-osd critical battery demo](./demo/critical.mp4)
+![dmg-osd-critical-battery-demo](https://github.com/user-attachments/assets/34d0117c-fbfc-46d0-acca-96ab1005f483)
+
 
 ## Features
 
