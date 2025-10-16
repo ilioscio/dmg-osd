@@ -25,6 +25,24 @@ namespace DmgOsd {
             load_config();
         }
         
+        public void reload() {
+            // Reset to defaults first
+            critical_threshold = 15.0;
+            low_threshold = 30.0;
+            max_opacity = 0.4;
+            min_opacity = 0.0;
+            critical_pulse_duration_ms = 600;
+            low_pulse_duration_ms = 1200;
+            update_interval_ms = 5000;
+            vignette_size = 0.4;
+            red = 1.0;
+            green = 0.0;
+            blue = 0.0;
+            
+            // Load config again
+            load_config();
+        }
+        
         private void load_config() {
             string? config_path = find_config_file();
             

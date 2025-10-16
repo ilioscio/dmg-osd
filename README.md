@@ -17,6 +17,7 @@ Critical battery:
 - **Battery Aware**: Monitors battery via UPower through DBus
 - **Configurable**: Battery thresholds, colors, pulse rates, intensity
 - **Smart Behavior**: Automatically hides when charging
+- **Hot-Reload Configuration**: Send linux signals to reload your config
 
 ## Requirements
 
@@ -93,6 +94,18 @@ User config will be loaded if it is found in either ~/.config/dmg-osd/dmg-osd.co
 
 An example config is provided with defaults.
 
+## Hot-reload Configuration
+To reload your configuration changes without restarting dmg-osd, just send either a SIGHUP or USR1 linux signal, you can use the posix kill command for this, but you will need the process id of dmg-osd to use it. 
+
+```
+kill -s hup <dmg-osd pid>
+```
+It's easier to use pkill, if you have it installed because you won't need dmg-osd's process id.
+
+```
+pkill -HUP dmg-osd
+```
+
 ## Project Structure
 
 ```
@@ -110,14 +123,6 @@ dmg-osd/
 ├── README.md
 └── BUILD.md                    # Build information for different distros.
 ```
-
-## How It Works
-
-1. **Battery Monitoring**: Uses UPower via DBus to track battery percentage and charging state
-2. **Layer Shell**: GTK4 Layer Shell protocol places window on overlay layer (above all windows)
-3. **Click-Through**: Window doesn't intercept input, allowing interaction with apps beneath
-4. **Smooth Animation**: Cairo drawing with sine-wave pulsing effect
-5. **Smart Visibility**: Only shows when on battery power and below threshold
 
 ## Compatibility
 
@@ -148,4 +153,4 @@ MIT
 ## Authors
 [ilioscio](https://github.com/ilioscio)
 
-claude
+claude.ai

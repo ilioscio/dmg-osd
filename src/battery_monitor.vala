@@ -103,6 +103,11 @@ namespace DmgOsd {
             });
         }
         
+        public void force_check() {
+            // Manually trigger a battery check (used for config reload)
+            check_battery.begin();
+        }
+        
         private async void check_battery() {
             if (connection == null || battery_path == "") {
                 return;

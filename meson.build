@@ -15,6 +15,9 @@ gio_dep = dependency('gio-2.0')
 layer_shell_dep = dependency('gtk4-layer-shell-0')
 math_dep = meson.get_compiler('c').find_library('m', required: false)
 
+# Add posix vala package
+add_project_arguments(['--pkg', 'posix'], language: 'vala')
+
 # Source files
 sources = files(
   'src/main.vala',
