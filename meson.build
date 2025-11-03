@@ -24,7 +24,8 @@ sources = files(
   'src/application.vala',
   'src/overlay_window.vala',
   'src/battery_monitor.vala',
-  'src/config.vala'
+  'src/config.vala',
+  'src/settings_window.vala'
 )
 
 # Executable

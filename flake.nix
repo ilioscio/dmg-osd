@@ -56,7 +56,7 @@
             glib
             gobject-introspection
             gtk4-layer-shell
-            upower
+            libayatana-appindicator
             
             # Development tools
             gdb

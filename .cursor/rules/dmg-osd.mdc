@@ -1,0 +1,349 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# dmg-osd Project Rules
+
+You are an expert in Vala, GTK4, Wayland development, NixOS, and linux packaging for all common distros.
+
+**Important**:You always consider whether the design implementation in this rules file matches the current implementation and if changes need to be made to this document, as the project changes and the specification becomes more complex. You are always upfront about when editing this file is necessary.
+
+## Project Overview
+
+**dmg-osd** is a battery damage overlay for Wayland compositors, inspired by video game health indicators. When battery is low, the screen edges pulse red to notify the user organically.
+
+## Core Technologies
+
+- **Language**: Vala (0.56+)
+- **UI Framework**: GTK4 (4.18+)
+- **Wayland Integration**: gtk4-layer-shell
+- **Build System**: Meson + Ninja
+- **Dev Environment**: Nix Flakes
+- **Target Compositors**: Hyprland, Sway, other wlroots-based
+
+## Architecture Principles
+
+### 1. Clean Separation of Concerns
+
+- `application.vala` - Application lifecycle, signal handling, command-line args
+- `overlay_window.vala` - Transparent fullscreen overlay with vignette effect
+- `battery_monitor.vala` - UPower D-Bus integration for battery status
+- `config.vala` - Configuration loading/saving
+- `settings_window.vala` - GUI settings editor (launched with -g flag)
+
+### 2. Wayland-First Design
+
+- Use GTK4 Layer Shell for proper overlay positioning
+- Window MUST be on OVERLAY layer to stay above fullscreen apps
+- Window MUST be click-through (empty input region)
+- NO X11 dependencies or fallbacks
+
+### 3. Performance & Efficiency
+
+- 60 FPS animations using GLib timeouts
+- Efficient Cairo drawing with minimal redraws
+- D-Bus async operations to avoid blocking
+- Battery checks every 5 seconds (configurable)
+
+## Code Style Guidelines
+
+### Vala Conventions
+
+```vala
+// Namespace: PascalCase
+namespace DmgOsd {
+    // Classes: PascalCase
+    public class BatteryMonitor : Object {
+        // Private fields: snake_case with underscore
+        private Config config;
+        private uint timeout_id = 0;
+        
+        // Properties: snake_case
+        public double battery_percentage { get; set; }
+        
+        // Methods: snake_case
+        public void force_check() {
+            check_battery.begin();
+        }
+        
+        // Signals: snake_case
+        public signal void battery_level_changed(double percentage);
+    }
+}
+```
+
+### Naming Patterns
+
+- **Files**: `snake_case.vala` (e.g., `battery_monitor.vala`)
+- **UI Widgets**: `widget_name_purpose` (e.g., `critical_threshold_scale`)
+- **Config Keys**: `snake_case` (e.g., `critical_pulse_duration_ms`)
+
+### GTK4 Best Practices
+
+- Use modern GTK4 widgets (avoid deprecated ones)
+- Avoid: `Gtk.MessageDialog`, `Gtk.ColorButton` (both deprecated in 4.10+)
+- Use: Custom windows, `Gtk.Scale` + `Gtk.SpinButton` combos
+- Always bind scale and spin button values together
+- Set proper CSS classes for theming: `settings-window`, `suggested-action`, `destructive-action`
+
+## Configuration Management
+
+### Config File Format
+
+```ini
+# Simple key=value format, comments with #
+critical_threshold=15.0
+low_threshold=30.0
+red=1.0
+green=0.0
+blue=0.0
+```
+
+### Color Handling
+
+- **UI**: RGB values 0-255 (standard convention)
+- **Internal**: RGB values 0.0-1.0 (Cairo format)
+- **Always convert** between formats at UI boundaries
+
+### Config Priorities
+
+1. `~/.config/dmg-osd/dmg-osd.config` (highest)
+2. `./dmg-osd.config` (current directory)
+3. Hard-coded defaults (fallback)
+
+## Signal Handling
+
+- `SIGHUP` or `SIGUSR1` triggers config reload
+- Use `Unix.signal_add()` with `Posix.Signal.*`
+- Always include `--pkg posix` in meson.build
+
+## Window Transparency
+
+### Overlay Window (damage effect)
+
+```vala
+// MUST use Cairo CLEAR operator first
+cr.set_operator(Cairo.Operator.CLEAR);
+cr.paint();
+
+// Then composite overlay on top
+cr.set_operator(Cairo.Operator.OVER);
+cr.set_source_rgba(r, g, b, opacity);
+```
+
+### Settings Window
+
+```vala
+// Add CSS class and set solid background
+add_css_class("settings-window");
+var css = new Gtk.CssProvider();
+css.load_from_data("window { background-color: @theme_bg_color; }");
+```
+
+## Animation Guidelines
+
+### Vignette Pulse Effect
+
+- Use sine wave: `(Math.sin(phase) + 1.0) / 2.0`
+- Different pulse speeds for critical vs low battery
+- Smooth fade-out when conditions change
+- 60 FPS target with 16ms timeout
+
+### Radial Gradient (Vignette)
+
+```vala
+// Center is transparent, edges pulse with color
+var pattern = new Cairo.Pattern.radial(cx, cy, inner_r, cx, cy, outer_r);
+pattern.add_color_stop_rgba(0.0, r, g, b, 0.0);  // Center
+pattern.add_color_stop_rgba(1.0, r, g, b, opacity);  // Edges
+```
+
+## D-Bus Integration
+
+### Battery Monitoring
+
+- Use `Bus.get(BusType.SYSTEM)` for UPower
+- Call methods asynchronously with `yield`
+- Device path: `/org/freedesktop/UPower/devices/battery_BAT*`
+- Properties: `Percentage` (double), `State` (uint32)
+
+### State Values
+
+- 1 = Charging
+- 2 = Discharging
+- 4 = Fully charged
+
+## Build System (Meson)
+
+### Required Dependencies
+
+```meson
+gtk_dep = dependency('gtk4')
+glib_dep = dependency('glib-2.0')
+gobject_dep = dependency('gobject-2.0')
+gio_dep = dependency('gio-2.0')
+layer_shell_dep = dependency('gtk4-layer-shell-0')
+math_dep = meson.get_compiler('c').find_library('m', required: false)
+```
+
+### Vala Packages
+
+```meson
+add_project_arguments(['--pkg', 'posix'], language: 'vala')
+```
+
+## Nix Flake Structure
+
+- `flake.nix` - Package definition + dev shell
+- Dev shell includes: vala, meson, ninja, gtk4, gtk4-layer-shell
+- NO browser storage APIs (localStorage/sessionStorage not available)
+- Keep flake simple and reproducible
+
+## User Experience Principles
+
+### Settings GUI Design
+
+1. **Logical grouping**: Battery → Visual → Color → Animation
+2. **Consistent controls**: Scale + SpinButton for all numeric inputs
+3. **Live preview**: Color preview updates as sliders move
+4. **Clear feedback**: Success/error dialogs centered with concise text
+5. **Help text**: Include notes where behavior might be confusing
+
+### Battery Thresholds
+
+- Low threshold > Critical threshold (user can configure however)
+- No validation on save (user freedom)
+- Include note: "Critical threshold should be lower than low threshold"
+
+### Dialog Windows
+
+```vala
+// Centered, concise, non-resizable
+dialog.default_width = 300;
+dialog.resizable = false;
+
+// Box with CENTER alignment
+box.halign = Gtk.Align.CENTER;
+box.valign = Gtk.Align.CENTER;
+
+// Label and button both centered
+label.halign = Gtk.Align.CENTER;
+button.halign = Gtk.Align.CENTER;
+```
+
+## Testing & Debugging
+
+### Manual Testing
+
+```bash
+# Normal mode
+./builddir/dmg-osd
+
+# GUI mode
+./builddir/dmg-osd -g
+
+# Test config reload
+pkill -HUP dmg-osd
+
+# Test with custom threshold (create local config)
+echo "low_threshold=100.0" > dmg-osd.config
+```
+
+### Common Issues
+
+- **Gray overlay**: Check Cairo CLEAR operator usage
+- **Not click-through**: Verify `set_input_region(empty_region)` in `map` signal
+- **Doesn't cover bar**: Ensure `set_exclusive_zone(this, -1)`
+- **Transparent settings**: Check CSS class application
+
+## Packaging Considerations
+
+### Version Control
+
+- Use semantic versioning: v0.1.0, v0.2.0, etc.
+- Tag releases in git
+- Update version in `meson.build` and `flake.nix`
+
+### Distribution Priority
+
+1. **AUR** (Arch) - Primary target, community-driven
+2. **nixpkgs** - Already have flake, submit PR
+3. **Ubuntu PPA** - Broader reach
+4. **Fedora COPR** - Community repository
+5. **Flatpak** - Universal (lower priority due to system integration complexity)
+
+## Documentation Standards
+
+### Code Comments
+
+- Explain **why**, not what
+- Document non-obvious behavior
+- Flag workarounds with explanation
+
+### Commit Messages
+
+```
+feat: add RGB color sliders with 0-255 range
+fix: dialog windows now properly centered
+docs: update BUILD.md with Fedora instructions
+refactor: simplify config reload logic
+```
+
+## Absolute Don'ts
+
+- ❌ NO localStorage or browser storage APIs in artifacts
+- ❌ NO X11-specific code or dependencies
+- ❌ NO deprecated GTK widgets (MessageDialog, ColorButton, StatusIcon)
+- ❌ NO hardcoded paths (use Environment.get_user_config_dir())
+- ❌ NO blocking D-Bus calls (always use async/yield)
+- ❌ NO unnamed magic numbers (use const or config)
+
+## Quick Reference
+
+### File Structure
+
+```
+dmg-osd/
+├── flake.nix              # Nix package + dev shell
+├── meson.build            # Build configuration
+├── build.sh               # Build helper script
+├── src/
+│   ├── main.vala          # Entry point
+│   ├── application.vala   # App lifecycle
+│   ├── overlay_window.vala # Damage overlay
+│   ├── battery_monitor.vala # Battery D-Bus
+│   ├── config.vala        # Config management
+│   └── settings_window.vala # GUI settings
+├── README.md
+├── BUILD.md               # Non-Nix build instructions
+├── PACKAGING.md           # Distribution packaging plan
+└── dmg-osd.config         # Example config file
+```
+
+### Key Classes
+
+- `DmgOsdApplication` - Main app, handles CLI args and signals
+- `OverlayWindow` - Transparent fullscreen with vignette
+- `BatteryMonitor` - D-Bus → battery percentage + state
+- `Config` - Load/save configuration
+- `SettingsWindow` - GUI editor (launched with -g)
+
+### Important Signals
+
+- `battery_level_changed(double, bool, BatteryState)` - Battery update
+- `config_saved()` - Config saved, trigger reload
+
+## Vision Statement
+
+dmg-osd provides an **organic, non-intrusive** battery warning using visual cues inspired by video games. Users should feel the urgency through the pulsing red vignette without disrupting their workflow. The overlay stays on top of everything, works seamlessly on Wayland, and respects user customization through a clean, intuitive GUI.
+
+---
+
+When making changes, always consider:
+1. **Wayland compatibility** - Will this work on Hyprland/Sway?
+2. **Performance** - Is this efficient for constant animation?
+3. **User experience** - Is this intuitive and non-intrusive?
+4. **Maintainability** - Can future contributors understand this?
+5. **Documentation** - Has the spec changed such that we need to update any of the files: .cursor/rules/dmg-osd.mdc, README.md, PACKAGING.md, BUILD.md, or dmg-osd.config?
