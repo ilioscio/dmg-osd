@@ -10,7 +10,7 @@ namespace DmgOsd {
         private double current_green = 0.0;
         private double current_blue = 0.0;
         private bool is_pulsing = false;
-        private uint animation_id = 0;
+        private uint animation_id = 0;  // 0 means no animation running
         private uint current_pulse_duration = 1000;
         
         public OverlayWindow(Gtk.Application app, Config config) {

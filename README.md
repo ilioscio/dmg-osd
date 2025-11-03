@@ -113,13 +113,13 @@ dmg-osd/
 ├── flake.nix           # Nix flake with dependencies
 ├── meson.build         # Meson build configuration
 ├── build.sh            # Build script
+├── dmg-osd.config.example # Example configuration file
 ├── src/
 │   ├── main.vala               # Entry point
 │   ├── application.vala        # GTK Application
 │   ├── overlay_window.vala     # Wayland overlay window
 │   ├── battery_monitor.vala    # Battery monitoring via UPower using DBus
-│   ├── config.vala             # Application configuration
-│   └── dmg-osd.config.example  # Example configuration file
+│   └── config.vala             # Application configuration
 ├── README.md
 └── BUILD.md                    # Build information for different distros.
 ```

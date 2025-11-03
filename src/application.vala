@@ -147,7 +147,10 @@ namespace DmgOsd {
         }
         
         private void on_config_saved() {
-            reload_config();
+            // Config values already updated in memory, just force battery check with new thresholds
+            if (battery_monitor != null) {
+                battery_monitor.force_check();
+            }
         }
         
         private void on_battery_changed(double percentage, bool is_charging, BatteryState state) {

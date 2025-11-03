@@ -373,6 +373,7 @@ namespace DmgOsd {
             config.critical_threshold = 15.0;
             config.low_threshold = 30.0;
             config.max_opacity = 0.4;
+            config.min_opacity = 0.0;
             config.vignette_size = 0.4;
             config.critical_pulse_duration_ms = 600;
             config.low_pulse_duration_ms = 1200;
@@ -402,6 +403,8 @@ namespace DmgOsd {
             // Save to file
             if (config.save_to_file()) {
                 print("Configuration saved\n");
+                // Config already updated above, just signal that it was saved
+                // The application will force battery check with new thresholds
                 config_saved();
                 
                 // Show success message

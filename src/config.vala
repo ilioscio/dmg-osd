@@ -14,7 +14,7 @@ namespace DmgOsd {
         public uint update_interval_ms { get; set; default = 5000; }
         
         // Vignette settings
-        public double vignette_size { get; set; default = 0.3; }  // How far the vignette extends (0-1, where 1 is full screen)
+        public double vignette_size { get; set; default = 0.4; }  // How far the vignette extends (0-1, where 1 is full screen)
         
         // Color settings (RGB 0-1 range) - only red now
         public double red { get; set; default = 1.0; }
@@ -34,7 +34,7 @@ namespace DmgOsd {
             critical_pulse_duration_ms = 600;
             low_pulse_duration_ms = 1200;
             update_interval_ms = 5000;
-            vignette_size = 0.3;
+            vignette_size = 0.4;
             red = 1.0;
             green = 0.0;
             blue = 0.0;
