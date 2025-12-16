@@ -1,30 +1,27 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 set -e
 
-PROJECT_NAME="dmg-osd"
-BUILD_DIR="builddir"
+echo "Building dmg-osd..."
 
-echo "Building $PROJECT_NAME..."
-
-# Clean previous build if requested
-if [[ "$1" == "clean" ]]; then
+# Clean if requested
+if [ "$1" = "clean" ]; then
     echo "Cleaning previous build..."
-    rm -rf $BUILD_DIR
+    rm -rf builddir
 fi
 
 # Setup build directory
-if [[ ! -d "$BUILD_DIR" ]]; then
+if [ ! -d "builddir" ]; then
     echo "Setting up build directory..."
-    meson setup $BUILD_DIR
+    meson setup builddir
 fi
 
-# Build the project
 echo "Compiling..."
-meson compile -C $BUILD_DIR
+meson compile -C builddir
 
+echo ""
 echo "Build complete!"
-echo "Run with: ./$BUILD_DIR/$PROJECT_NAME"
+echo "Run with: ./builddir/dmg-osd"
 echo ""
 echo "Tips:"
 echo "  - The overlay will appear when battery is below configured threshold"

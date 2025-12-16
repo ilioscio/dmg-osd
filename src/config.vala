@@ -16,10 +16,13 @@ namespace DmgOsd {
         // Vignette settings
         public double vignette_size { get; set; default = 0.4; }  // How far the vignette extends (0-1, where 1 is full screen)
         
-        // Color settings (RGB 0-1 range) - only red now
-        public double red { get; set; default = 1.0; }
-        public double green { get; set; default = 0.0; }
-        public double blue { get; set; default = 0.0; }
+        // Color settings - hexadecimal RGB format (e.g., #FF0000 for red)
+        public string color { get; set; default = "#FF0000"; }
+        
+        // Temporary storage for backward compatibility with old RGB format
+        private double temp_red = -1.0;
+        private double temp_green = -1.0;
+        private double temp_blue = -1.0;
         
         public Config() {
             load_config();
@@ -35,9 +38,7 @@ namespace DmgOsd {
             low_pulse_duration_ms = 1200;
             update_interval_ms = 5000;
             vignette_size = 0.4;
-            red = 1.0;
-            green = 0.0;
-            blue = 0.0;
+            color = "#FF0000"; // Reset color to default
             
             // Load config again
             load_config();
@@ -131,14 +132,21 @@ namespace DmgOsd {
                 case "vignette_size":
                     vignette_size = double.parse(value);
                     break;
+                case "color":
+                    color = value;
+                    break;
+                // Backward compatibility for old RGB format
                 case "red":
-                    red = double.parse(value);
+                    temp_red = double.parse(value);
+                    convert_rgb_to_hex();
                     break;
                 case "green":
-                    green = double.parse(value);
+                    temp_green = double.parse(value);
+                    convert_rgb_to_hex();
                     break;
                 case "blue":
-                    blue = double.parse(value);
+                    temp_blue = double.parse(value);
+                    convert_rgb_to_hex();
                     break;
                 default:
                     warning("Unknown config key: %s", key);
@@ -146,11 +154,49 @@ namespace DmgOsd {
             }
         }
         
+        private void convert_rgb_to_hex() {
+            // Only convert if all three values are set (all >= 0)
+            if (temp_red >= 0.0 && temp_green >= 0.0 && temp_blue >= 0.0) {
+                uint r = (uint)(temp_red * 255.0);
+                uint g = (uint)(temp_green * 255.0);
+                uint b = (uint)(temp_blue * 255.0);
+                color = "#%02X%02X%02X".printf(r, g, b);
+                print("Converted old RGB config to hex: %s\n", color);
+                // Reset temps so we don't convert again
+                temp_red = -1.0;
+                temp_green = -1.0;
+                temp_blue = -1.0;
+            }
+        }
+        
         public void get_color_for_level(double percentage, out double r, out double g, out double b) {
-            // Always red for both states
-            r = red;
-            g = green;
-            b = blue;
+            // Parse hex color format: #RRGGBB (skip the # and take pairs)
+            if (color.length >= 7) {
+                r = hex_to_uint(color.substring(1, 2)) / 255.0;
+                g = hex_to_uint(color.substring(3, 2)) / 255.0;
+                b = hex_to_uint(color.substring(5, 2)) / 255.0;
+            } else {
+                // Fallback to red if parsing fails
+                r = 1.0;
+                g = 0.0;
+                b = 0.0;
+            }
+        }
+        
+        private uint hex_to_uint(string hex_str) {
+            uint result = 0;
+            for (int i = 0; i < hex_str.length; i++) {
+                unichar c = hex_str[i];
+                result = result * 16;
+                if (c >= '0' && c <= '9') {
+                    result += (c - '0');
+                } else if (c >= 'A' && c <= 'F') {
+                    result += (c - 'A' + 10);
+                } else if (c >= 'a' && c <= 'f') {
+                    result += (c - 'a' + 10);
+                }
+            }
+            return result;
         }
         
         public double get_max_opacity_for_level(double percentage) {
@@ -209,9 +255,7 @@ update_interval_ms=%u
 vignette_size=%.2f
 
 # Color settings (RGB values 0.0-1.0)
-red=%.2f
-green=%.2f
-blue=%.2f
+color=%s
 """.printf(
                 critical_threshold,
                 low_threshold,
@@ -221,9 +265,7 @@ blue=%.2f
                 low_pulse_duration_ms,
                 update_interval_ms,
                 vignette_size,
-                red,
-                green,
-                blue
+                color
             );
             
             // Write to file

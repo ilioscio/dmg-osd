@@ -16,12 +16,7 @@ namespace DmgOsd {
         private Gtk.SpinButton critical_pulse_spin;
         private Gtk.SpinButton low_pulse_spin;
         private Gtk.SpinButton update_interval_spin;
-        private Gtk.Scale color_red_scale;
-        private Gtk.SpinButton color_red_spin;
-        private Gtk.Scale color_green_scale;
-        private Gtk.SpinButton color_green_spin;
-        private Gtk.Scale color_blue_scale;
-        private Gtk.SpinButton color_blue_spin;
+        private Gtk.Entry color_hex_entry;
         private Gtk.DrawingArea color_preview;
         
         public signal void config_saved();
@@ -142,7 +137,13 @@ namespace DmgOsd {
             
             low_threshold_spin = new Gtk.SpinButton.with_range(1, 100, 1);
             
-            bind_scale_spin(low_threshold_scale, low_threshold_spin);
+            low_threshold_scale.value_changed.connect(() => {
+                low_threshold_spin.value = low_threshold_scale.get_value();
+            });
+            
+            low_threshold_spin.value_changed.connect(() => {
+                low_threshold_scale.set_value(low_threshold_spin.value);
+            });
             
             grid.attach(low_label, 0, 0, 1, 1);
             grid.attach(low_threshold_scale, 1, 0, 1, 1);
@@ -158,7 +159,13 @@ namespace DmgOsd {
             
             critical_threshold_spin = new Gtk.SpinButton.with_range(1, 100, 1);
             
-            bind_scale_spin(critical_threshold_scale, critical_threshold_spin);
+            critical_threshold_scale.value_changed.connect(() => {
+                critical_threshold_spin.value = critical_threshold_scale.get_value();
+            });
+            
+            critical_threshold_spin.value_changed.connect(() => {
+                critical_threshold_scale.set_value(critical_threshold_spin.value);
+            });
             
             grid.attach(critical_label, 0, 1, 1, 1);
             grid.attach(critical_threshold_scale, 1, 1, 1, 1);
@@ -192,7 +199,13 @@ namespace DmgOsd {
             max_opacity_spin = new Gtk.SpinButton.with_range(0.1, 1.0, 0.01);
             max_opacity_spin.digits = 2;
             
-            bind_scale_spin(max_opacity_scale, max_opacity_spin);
+            max_opacity_scale.value_changed.connect(() => {
+                max_opacity_spin.value = max_opacity_scale.get_value();
+            });
+            
+            max_opacity_spin.value_changed.connect(() => {
+                max_opacity_scale.set_value(max_opacity_spin.value);
+            });
             
             grid.attach(opacity_label, 0, 0, 1, 1);
             grid.attach(max_opacity_scale, 1, 0, 1, 1);
@@ -209,7 +222,13 @@ namespace DmgOsd {
             vignette_size_spin = new Gtk.SpinButton.with_range(0.1, 1.0, 0.01);
             vignette_size_spin.digits = 2;
             
-            bind_scale_spin(vignette_size_scale, vignette_size_spin);
+            vignette_size_scale.value_changed.connect(() => {
+                vignette_size_spin.value = vignette_size_scale.get_value();
+            });
+            
+            vignette_size_spin.value_changed.connect(() => {
+                vignette_size_scale.set_value(vignette_size_spin.value);
+            });
             
             grid.attach(vignette_label, 0, 1, 1, 1);
             grid.attach(vignette_size_scale, 1, 1, 1, 1);
@@ -258,6 +277,20 @@ namespace DmgOsd {
             grid.row_spacing = 12;
             grid.column_spacing = 12;
             
+            // Color (Hex) input
+            var color_label = new Gtk.Label("Color (Hex)");
+            color_label.halign = Gtk.Align.START;
+            
+            color_hex_entry = new Gtk.Entry();
+            color_hex_entry.placeholder_text = "e.g., #FF0000";
+            color_hex_entry.add_css_class("monospace");
+            color_hex_entry.changed.connect(() => {
+                color_preview.queue_draw(); // Redraw to show the new color
+            });
+            
+            grid.attach(color_label, 0, 0, 1, 1);
+            grid.attach(color_hex_entry, 1, 0, 1, 1);
+            
             // Color preview
             var preview_label = new Gtk.Label("Preview");
             preview_label.halign = Gtk.Align.START;
@@ -265,94 +298,25 @@ namespace DmgOsd {
             color_preview = new Gtk.DrawingArea();
             color_preview.set_content_width(100);
             color_preview.set_content_height(60);
-            color_preview.set_draw_func(draw_color_preview);
+            color_preview.add_css_class("color-preview");
+            color_preview.set_draw_func(on_color_preview_draw);
             
-            grid.attach(preview_label, 0, 0, 1, 1);
-            grid.attach(color_preview, 1, 0, 2, 1);
-            
-            // Red channel
-            var red_label = new Gtk.Label("Red");
-            red_label.halign = Gtk.Align.START;
-            
-            color_red_scale = new Gtk.Scale.with_range(Gtk.Orientation.HORIZONTAL, 0.0, 255.0, 1.0);
-            color_red_scale.hexpand = true;
-            color_red_scale.draw_value = false;
-            color_red_scale.value_changed.connect(() => color_preview.queue_draw());
-            
-            color_red_spin = new Gtk.SpinButton.with_range(0.0, 255.0, 1.0);
-            color_red_spin.digits = 0;
-            
-            bind_scale_spin(color_red_scale, color_red_spin);
-            
-            grid.attach(red_label, 0, 1, 1, 1);
-            grid.attach(color_red_scale, 1, 1, 1, 1);
-            grid.attach(color_red_spin, 2, 1, 1, 1);
-            
-            // Green channel
-            var green_label = new Gtk.Label("Green");
-            green_label.halign = Gtk.Align.START;
-            
-            color_green_scale = new Gtk.Scale.with_range(Gtk.Orientation.HORIZONTAL, 0.0, 255.0, 1.0);
-            color_green_scale.hexpand = true;
-            color_green_scale.draw_value = false;
-            color_green_scale.value_changed.connect(() => color_preview.queue_draw());
-            
-            color_green_spin = new Gtk.SpinButton.with_range(0.0, 255.0, 1.0);
-            color_green_spin.digits = 0;
-            
-            bind_scale_spin(color_green_scale, color_green_spin);
-            
-            grid.attach(green_label, 0, 2, 1, 1);
-            grid.attach(color_green_scale, 1, 2, 1, 1);
-            grid.attach(color_green_spin, 2, 2, 1, 1);
-            
-            // Blue channel
-            var blue_label = new Gtk.Label("Blue");
-            blue_label.halign = Gtk.Align.START;
-            
-            color_blue_scale = new Gtk.Scale.with_range(Gtk.Orientation.HORIZONTAL, 0.0, 255.0, 1.0);
-            color_blue_scale.hexpand = true;
-            color_blue_scale.draw_value = false;
-            color_blue_scale.value_changed.connect(() => color_preview.queue_draw());
-            
-            color_blue_spin = new Gtk.SpinButton.with_range(0.0, 255.0, 1.0);
-            color_blue_spin.digits = 0;
-            
-            bind_scale_spin(color_blue_scale, color_blue_spin);
-            
-            grid.attach(blue_label, 0, 3, 1, 1);
-            grid.attach(color_blue_scale, 1, 3, 1, 1);
-            grid.attach(color_blue_spin, 2, 3, 1, 1);
+            grid.attach(preview_label, 0, 1, 1, 1);
+            grid.attach(color_preview, 1, 1, 1, 1);
             
             return grid;
         }
         
-        private void draw_color_preview(Gtk.DrawingArea area, Cairo.Context cr, int width, int height) {
-            // Get current color values (convert from 0-255 to 0-1)
-            double r = color_red_scale.get_value() / 255.0;
-            double g = color_green_scale.get_value() / 255.0;
-            double b = color_blue_scale.get_value() / 255.0;
-            
-            // Draw border
-            cr.set_source_rgb(0.5, 0.5, 0.5);
-            cr.rectangle(0, 0, width, height);
-            cr.stroke();
-            
-            // Fill with color
-            cr.set_source_rgb(r, g, b);
-            cr.rectangle(2, 2, width - 4, height - 4);
-            cr.fill();
-        }
-        
-        private void bind_scale_spin(Gtk.Scale scale, Gtk.SpinButton spin) {
-            scale.value_changed.connect(() => {
-                spin.value = scale.get_value();
-            });
-            
-            spin.value_changed.connect(() => {
-                scale.set_value(spin.value);
-            });
-        }
+        private void on_color_preview_draw(Gtk.DrawingArea widget, Cairo.Context cr, int width, int height) {
+             var rgba = Gdk.RGBA();
+             if (rgba.parse(color_hex_entry.text)) {
+                 cr.set_source_rgba(rgba.red, rgba.green, rgba.blue, rgba.alpha);
+                 cr.paint();
+             } else {
+                 cr.set_source_rgba(1.0, 0.0, 0.0, 1.0); // Red fallback
+                 cr.paint();
+             }
+         }
         
         public void refresh_from_config() {
             critical_threshold_spin.value = config.critical_threshold;
@@ -363,10 +327,17 @@ namespace DmgOsd {
             low_pulse_spin.value = config.low_pulse_duration_ms;
             update_interval_spin.value = config.update_interval_ms;
             
-            // Set color sliders (convert from 0-1 to 0-255)
-            color_red_spin.value = config.red * 255.0;
-            color_green_spin.value = config.green * 255.0;
-            color_blue_spin.value = config.blue * 255.0;
+            // Parse hex color from config and update RGBA
+            var rgba = Gdk.RGBA();
+            if (rgba.parse(config.color)) {
+                color_hex_entry.text = config.color;
+                color_preview.queue_draw(); // Redraw to show the new color
+            } else {
+                warning("Invalid color in config: %s, using red fallback", config.color);
+                rgba.parse("#FF0000");
+                color_hex_entry.text = "#FF0000";
+                color_preview.queue_draw(); // Redraw to show the new color
+            }
         }
         
         private void on_reset_clicked() {
@@ -378,9 +349,7 @@ namespace DmgOsd {
             config.critical_pulse_duration_ms = 600;
             config.low_pulse_duration_ms = 1200;
             config.update_interval_ms = 5000;
-            config.red = 1.0;
-            config.green = 0.0;
-            config.blue = 0.0;
+            config.color = "#FF0000";
             
             refresh_from_config();
         }
@@ -395,10 +364,9 @@ namespace DmgOsd {
             config.low_pulse_duration_ms = (uint)low_pulse_spin.value;
             config.update_interval_ms = (uint)update_interval_spin.value;
             
-            // Get color from sliders (convert from 0-255 to 0-1)
-            config.red = color_red_spin.value / 255.0;
-            config.green = color_green_spin.value / 255.0;
-            config.blue = color_blue_spin.value / 255.0;
+            // Convert RGBA to hex format for config storage
+            string hex_color = color_hex_entry.text;
+            config.color = hex_color;
             
             // Save to file
             if (config.save_to_file()) {
