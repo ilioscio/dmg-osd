@@ -1,6 +1,6 @@
 # dmg-osd
 
-A low battery overlay for Wayland compositors inspired by classic video game health indicators. Your screen pulses red when battery is low.
+A low battery overlay for Wayland inspired by classic video game health indicators, making your screen pulse a customizable color when your battery reaches a threshold.
 
 ## Demo
 
@@ -15,6 +15,7 @@ Critical battery:
 - **Wayland Native**: Uses GTK4 Layer Shell for proper overlay rendering
 - **Always On Top**: Stays above fullscreen windows using the overlay layer
 - **Battery Aware**: Monitors battery via UPower through DBus
+- **Optional GUI**: Customize your config via a gui, available with -g
 - **Configurable**: Battery thresholds, colors, pulse rates, intensity
 - **Smart Behavior**: Automatically hides when charging
 - **Hot-Reload Configuration**: Send linux signals to reload your config
@@ -23,9 +24,15 @@ Critical battery:
 
 - NixOS (or Nix package manager) *Or see note below
 - Wayland compositor (tested on Hyprland)
-- Battery-powered device (duh)
+- Battery-powered device (obviously)
 
 Note: Non-Nix users see BUILD.md for instructions on building with traditional package managers on Debian, Ubuntu, Arch Linux, and Fedora.
+
+## Try Without Installing using Nix!
+If you have nix, and flakes enabled, simply run:
+```bash
+nix run github:ilioscio/dmg-osd
+```
 
 ## Building
 
@@ -128,8 +135,8 @@ dmg-osd/
 
 Tested on:
 - Hyprland
-- Sway (should work)
-- Other wlroots-based compositors (should work)
+- Sway (untested but should work)
+- Other wlroots-based compositors (also untested but should work)
 
 Requires compositor support for:
 - `wlr-layer-shell-unstable-v1` protocol
@@ -152,5 +159,4 @@ MIT
 
 ## Authors
 [ilioscio](https://github.com/ilioscio)
-
-claude.ai
+[claude](https://github.com/claude)
